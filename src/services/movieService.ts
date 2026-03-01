@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Movie } from '../types/movie';
+import type { Movie } from '../types/movie';
 
 export interface MoviesResponse {
   results: Movie[];
@@ -24,5 +24,5 @@ export const fetchMovies = async (
     }
   );
 
-  return data; // повертаємо всю відповідь з results, total_pages тощо
+  return data;
 };

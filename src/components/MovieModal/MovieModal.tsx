@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Movie } from '../../types/movie';
+import type { Movie } from '../../types/movie';
 import css from './MovieModal.module.css';
 
 interface MovieModalProps {
@@ -8,7 +8,10 @@ interface MovieModalProps {
   onClose: () => void;
 }
 
-export default function MovieModal({ movie, onClose }: MovieModalProps) {
+export default function MovieModal({
+  movie,
+  onClose,
+}: MovieModalProps) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -25,9 +28,15 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
 
   return createPortal(
     <div className={css.backdrop} onClick={onClose}>
-      <div className={css.modal} onClick={(e) => e.stopPropagation()}>
-        <button className={css.closeButton} onClick={onClose}>
-          &times;
+      <div
+        className={css.modal}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          className={css.closeButton}
+          onClick={onClose}
+        >
+          ×
         </button>
 
         <img
@@ -38,12 +47,8 @@ export default function MovieModal({ movie, onClose }: MovieModalProps) {
         <div>
           <h2>{movie.title}</h2>
           <p>{movie.overview}</p>
-          <p>
-            <strong>Release Date:</strong> {movie.release_date}
-          </p>
-          <p>
-            <strong>Rating:</strong> {movie.vote_average}/10
-          </p>
+          <p><strong>Release:</strong> {movie.release_date}</p>
+          <p><strong>Rating:</strong> {movie.vote_average}/10</p>
         </div>
       </div>
     </div>,

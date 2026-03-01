@@ -5,7 +5,7 @@ import ReactPaginate from 'react-paginate';
 import css from './App.module.css';
 
 import { fetchMovies } from '../../services/movieService';
-import { Movie } from '../../types/movie';
+import type { Movie } from '../../types/movie';
 
 import SearchBar from '../SearchBar/SearchBar';
 import MovieGrid from '../MovieGrid/MovieGrid';
@@ -22,10 +22,9 @@ export default function App() {
     queryKey: ['movies', query, page],
     queryFn: () => fetchMovies(query, page),
     enabled: Boolean(query),
-    placeholderData: keepPreviousData, // ✅ правильний спосіб для v5
+    placeholderData: keepPreviousData,
   });
 
-  // Toast якщо нічого не знайдено
   useEffect(() => {
     if (data && data.results.length === 0) {
       toast.error('No movies found for your request.');
@@ -34,7 +33,7 @@ export default function App() {
 
   const handleSearch = (newQuery: string) => {
     setQuery(newQuery);
-    setPage(1); // ✅ скидання сторінки
+    setPage(1);
   };
 
   const handlePageChange = (selectedItem: { selected: number }) => {
