@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { Movie } from '../types/movie';
 
-export interface MoviesResponse {
+interface MoviesResponse {
   results: Movie[];
   page: number;
   total_pages: number;
@@ -23,6 +23,5 @@ export const fetchMovies = async (
       },
     }
   );
-
   return data;
 };
