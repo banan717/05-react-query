@@ -19,6 +19,7 @@ export const App: React.FC = () => {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
 
+  // debounce для пошуку
   const debounced = useDebouncedCallback((value: string) => {
     setSearch(value);
     setPage(1);
@@ -29,13 +30,14 @@ export const App: React.FC = () => {
   const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, search],
     queryFn: () => fetchNotes(queryParams),
-    placeholderData: { notes: [], totalPages: 1 }, // робимо placeholderData, а keepPreviousData прибираємо
+    placeholderData: { notes: [], totalPages: 1 }, // замість keepPreviousData
   });
 
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox callback={debounced} />
+        {/* передаємо debounce у проп onSearch */}
+        <SearchBox onSearch={debounced} />
         <button className={css.button} onClick={() => setModalOpen(true)}>
           Create note +
         </button>

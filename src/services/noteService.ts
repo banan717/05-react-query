@@ -19,6 +19,7 @@ export interface FetchNotesResponse {
   totalPages: number;
 }
 
+// GET notes
 export const fetchNotes = async ({
   page,
   perPage,
@@ -27,17 +28,20 @@ export const fetchNotes = async ({
   const params: Record<string, string | number> = { page, perPage };
   if (search) params.search = search;
 
-  const response = await axios.get(`${BASE_URL}/notes`, { headers: config.headers, params });
+  const response = await axios.get<FetchNotesResponse>(`${BASE_URL}/notes`, { headers: config.headers, params });
   return response.data;
 };
 
+// CREATE note
 export const createNote = async (note: Omit<Note, "id" | "createdAt" | "updatedAt">): Promise<Note> => {
-  const response = await axios.post(`${BASE_URL}/notes`, note, config);
+  const response = await axios.post<Note>(`${BASE_URL}/notes`, note, config);
   return response.data;
 };
 
-export const deleteNote = async (id: string): Promise<void> => {
-  await axios.delete(`${BASE_URL}/notes/${id}`, config);
+// DELETE note
+export const deleteNote = async (id: string): Promise<Note> => {
+  const response = await axios.delete<Note>(`${BASE_URL}/notes/${id}`, config);
+  return response.data; // повертаємо видалену нотатку
 };
 
 // Експорт типу Note
