@@ -28,10 +28,7 @@ export const fetchNotes = async ({
   if (search) params.search = search;
 
   const response = await axios.get(`${BASE_URL}/notes`, { headers: config.headers, params });
-  return {
-    notes: response.data.items,
-    totalPages: response.data.totalPages,
-  };
+  return response.data;
 };
 
 export const createNote = async (note: Omit<Note, "id" | "createdAt" | "updatedAt">): Promise<Note> => {
@@ -39,9 +36,9 @@ export const createNote = async (note: Omit<Note, "id" | "createdAt" | "updatedA
   return response.data;
 };
 
-export const deleteNote = async (id: string): Promise<Note> => {
-  const response = await axios.delete(`${BASE_URL}/notes/${id}`, config);
-  return response.data;
+export const deleteNote = async (id: string): Promise<void> => {
+  await axios.delete(`${BASE_URL}/notes/${id}`, config);
 };
 
+// Експорт типу Note
 export type { Note };

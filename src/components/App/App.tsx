@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchNotes, FetchNotesResponse, FetchNotesParams } from "../../services/noteService";
+import { fetchNotes } from "../../services/noteService";
+import type { FetchNotesResponse, FetchNotesParams } from "../../services/noteService";
 import { NoteList } from "../NoteList/NoteList";
 import { NoteForm } from "../NoteForm/NoteForm";
-import { Modal } from "../Modal/Modal";
-import { Pagination } from "../Pagination/Pagination";
-import { SearchBox } from "../SearchBox/SearchBox";
+import Modal from "../Modal/Modal";
+import Pagination from "../Pagination/Pagination";
+import SearchBox from "../SearchBox/SearchBox";
 
 import css from "./App.module.css";
 
@@ -28,8 +29,7 @@ export const App: React.FC = () => {
   const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, search],
     queryFn: () => fetchNotes(queryParams),
-    placeholderData: { notes: [], totalPages: 1 },
-    keepPreviousData: true,
+    placeholderData: { notes: [], totalPages: 1 }, // робимо placeholderData, а keepPreviousData прибираємо
   });
 
   return (
@@ -45,11 +45,10 @@ export const App: React.FC = () => {
       {isError && <p>There was an error, please try again...</p>}
 
       {data?.notes.length ? <NoteList notes={data.notes} /> : null}
-
-      {data && data.totalPages > 1 && (
+      {data?.totalPages && data.totalPages > 1 && (
         <Pagination
-          pageCount={data.totalPages}
-          currentPage={page}
+          totalPages={data.totalPages}
+          page={page}
           onPageChange={setPage}
         />
       )}
