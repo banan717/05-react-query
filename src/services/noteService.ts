@@ -8,18 +8,20 @@ const config = {
   headers: { Authorization: `Bearer ${TOKEN}` },
 };
 
+// Параметри для запиту нотаток
 export interface FetchNotesParams {
   page: number;
   perPage: number;
   search?: string;
 }
 
+// Відповідь API для нотаток
 export interface FetchNotesResponse {
   notes: Note[];
   totalPages: number;
 }
 
-// GET notes
+// Отримати нотатки з API з пагінацією та пошуком
 export const fetchNotes = async ({
   page,
   perPage,
@@ -28,20 +30,26 @@ export const fetchNotes = async ({
   const params: Record<string, string | number> = { page, perPage };
   if (search) params.search = search;
 
-  const response = await axios.get<FetchNotesResponse>(`${BASE_URL}/notes`, { headers: config.headers, params });
+  const response = await axios.get<FetchNotesResponse>(`${BASE_URL}/notes`, {
+    headers: config.headers,
+    params,
+  });
+
   return response.data;
 };
 
-// CREATE note
-export const createNote = async (note: Omit<Note, "id" | "createdAt" | "updatedAt">): Promise<Note> => {
+// Створити нову нотатку
+export const createNote = async (
+  note: Omit<Note, "id" | "createdAt" | "updatedAt">
+): Promise<Note> => {
   const response = await axios.post<Note>(`${BASE_URL}/notes`, note, config);
   return response.data;
 };
 
-// DELETE note
+// Видалити нотатку та повернути видалену нотатку
 export const deleteNote = async (id: string): Promise<Note> => {
   const response = await axios.delete<Note>(`${BASE_URL}/notes/${id}`, config);
-  return response.data; // повертаємо видалену нотатку
+  return response.data;
 };
 
 // Експорт типу Note

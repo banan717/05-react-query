@@ -1,12 +1,8 @@
-// src/components/NoteForm/NoteForm.tsx
 import React from "react";
-import { useFormik } from "formik";
+import { useFormik, type FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
-import type { Note, NoteTag } from "../../types/note";
-import { createNote } from "../../services/noteService";
-
+import { createNote, type Note } from "../../services/noteService";
 import css from "./NoteForm.module.css";
 
 interface NoteFormProps {
@@ -16,20 +12,23 @@ interface NoteFormProps {
 interface NoteFormValues {
   title: string;
   content: string;
-  tag: NoteTag;
+  tag: Note["tag"];
 }
 
-const noteSchema = Yup.object({
-  title: Yup.string().min(3, "Min 3 characters").max(50, "Max 50 characters").required("Required"),
-  content: Yup.string().max(500, "Max 500 characters"),
-  tag: Yup.mixed<NoteTag>().oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"]).required("Required"),
+const validationSchema = Yup.object({
+  title: Yup.string().min(3).max(50).required("Title is required"),
+  content: Yup.string().max(500, "Content is too long"),
+  tag: Yup.mixed<Note["tag"]>()
+    .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"])
+    .required("Tag is required"),
 });
 
 export const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: (note: Omit<Note, "id" | "createdAt" | "updatedAt">) => createNote(note),
+    mutationFn: (note: Omit<Note, "id" | "createdAt" | "updatedAt">) =>
+      createNote(note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
       onClose();
@@ -38,9 +37,10 @@ export const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
 
   const formik = useFormik<NoteFormValues>({
     initialValues: { title: "", content: "", tag: "Todo" },
-    validationSchema: noteSchema,
-    onSubmit: (values) => {
+    validationSchema,
+    onSubmit: (values: NoteFormValues, actions: FormikHelpers<NoteFormValues>) => {
       mutation.mutate(values);
+      actions.setSubmitting(false);
     },
   });
 
@@ -50,14 +50,16 @@ export const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
         <label htmlFor="title">Title</label>
         <input
           id="title"
-          type="text"
           name="title"
+          type="text"
           className={css.input}
+          value={formik.values.title}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
-          value={formik.values.title}
         />
-        {formik.touched.title && formik.errors.title && <span className={css.error}>{formik.errors.title}</span>}
+        {formik.touched.title && formik.errors.title && (
+          <span className={css.error}>{formik.errors.title}</span>
+        )}
       </div>
 
       <div className={css.formGroup}>
@@ -67,9 +69,9 @@ export const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
           name="content"
           rows={8}
           className={css.textarea}
+          value={formik.values.content}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
-          value={formik.values.content}
         />
         {formik.touched.content && formik.errors.content && (
           <span className={css.error}>{formik.errors.content}</span>
@@ -82,9 +84,9 @@ export const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
           id="tag"
           name="tag"
           className={css.select}
+          value={formik.values.tag}
           onChange={formik.handleChange}
           onBlur={formik.handleBlur}
-          value={formik.values.tag}
         >
           <option value="Todo">Todo</option>
           <option value="Work">Work</option>
@@ -92,17 +94,30 @@ export const NoteForm: React.FC<NoteFormProps> = ({ onClose }) => {
           <option value="Meeting">Meeting</option>
           <option value="Shopping">Shopping</option>
         </select>
-        {formik.touched.tag && formik.errors.tag && <span className={css.error}>{formik.errors.tag}</span>}
+        {formik.touched.tag && formik.errors.tag && (
+          <span className={css.error}>{formik.errors.tag}</span>
+        )}
       </div>
 
       <div className={css.actions}>
-        <button type="button" className={css.cancelButton} onClick={onClose}>
+        <button
+          type="button"
+          className={css.cancelButton}
+          onClick={onClose}
+          disabled={mutation.isPending}
+        >
           Cancel
         </button>
-        <button type="submit" className={css.submitButton} disabled={mutation.isLoading}>
-          Create note
+        <button
+          type="submit"
+          className={css.submitButton}
+          disabled={mutation.isPending}
+        >
+          {mutation.isPending ? "Creating..." : "Create note"}
         </button>
       </div>
     </form>
   );
 };
+
+export default NoteForm;
