@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
 import { useQuery } from "@tanstack/react-query";
 
-import { fetchNotes, FetchNotesResponse } from "../../services/noteService";
+import { fetchNotes, FetchNotesResponse, FetchNotesParams } from "../../services/noteService";
 import { NoteList } from "../NoteList/NoteList";
 import { NoteForm } from "../NoteForm/NoteForm";
 import { Modal } from "../Modal/Modal";
@@ -23,17 +23,19 @@ export const App: React.FC = () => {
     setPage(1);
   }, 500);
 
-  const { data, isLoading, isError } = useQuery<FetchNotesResponse>({
+  const queryParams: FetchNotesParams = { page, perPage: PER_PAGE, search };
+
+  const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, search],
-    queryFn: () => fetchNotes({ page, perPage: PER_PAGE, search }),
-    keepPreviousData: true,
+    queryFn: () => fetchNotes(queryParams),
     placeholderData: { notes: [], totalPages: 1 },
+    keepPreviousData: true,
   });
 
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox onChange={debounced} />
+        <SearchBox callback={debounced} />
         <button className={css.button} onClick={() => setModalOpen(true)}>
           Create note +
         </button>
@@ -42,7 +44,8 @@ export const App: React.FC = () => {
       {isLoading && <p>Loading notes...</p>}
       {isError && <p>There was an error, please try again...</p>}
 
-      {data && data.notes.length > 0 && <NoteList notes={data.notes} />}
+      {data?.notes.length ? <NoteList notes={data.notes} /> : null}
+
       {data && data.totalPages > 1 && (
         <Pagination
           pageCount={data.totalPages}
