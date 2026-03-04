@@ -1,68 +1,65 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { fetchNotes, deleteNote, createNote } from "../../services/noteService";
+import { useQuery } from "@tanstack/react-query";
+import { fetchNotes } from "../../services/noteService";
 import NoteList from "../NoteList/NoteList";
 import Pagination from "../Pagination/Pagination";
-import Modal from "../Modal/Modal";
-import NoteForm from "../NoteForm/NoteForm";
 import SearchBox from "../SearchBox/SearchBox";
+import NoteForm from "../NoteForm/NoteForm";
+import Modal from "../Modal/Modal";
 import css from "./App.module.css";
 
-export default function App() {
+const App: React.FC = () => {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const queryClient = useQueryClient();
-
+  // Debounced зміна пошукового запиту
   const debouncedSearch = useDebouncedCallback((value: string) => {
-    setSearch(value);
     setPage(1);
+    setSearch(value);
   }, 500);
 
+  // Використання TanStack Query для завантаження нотаток
   const { data, isLoading, isError } = useQuery({
     queryKey: ["notes", page, search],
-    queryFn: () => fetchNotes({ page, perPage: 12, search }),
+    queryFn: () => fetchNotes({ page, search }),
+    keepPreviousData: true, // ⚡ ключове для уникнення мерехтіння
+    placeholderData: { notes: [], totalPages: 1 }, // початкові дані
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
-  });
-
-  const createMutation = useMutation({
-    mutationFn: createNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setIsModalOpen(false);
-    },
-  });
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
 
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
-        <SearchBox onSearch={debouncedSearch} />
-        {data && data.totalPages > 1 && (
-          <Pagination totalPages={data.totalPages} page={page} onPageChange={setPage} />
-        )}
-        <button className={css.button} onClick={() => setIsModalOpen(true)}>
+        <SearchBox onChange={(value) => debouncedSearch.callback(value)} />
+        <button className={css.button} onClick={openModal}>
           Create note +
         </button>
       </header>
 
-      {isLoading && <p>Loading...</p>}
-      {isError && <p>Error...</p>}
+      {isLoading && <p className={css.loader}>Loading notes...</p>}
+      {isError && <p className={css.error}>Error loading notes. Please try again.</p>}
 
-      {data && data.notes.length > 0 && (
-        <NoteList notes={data.notes} onDelete={(id) => deleteMutation.mutate(id)} />
+      {data.notes.length > 0 && <NoteList notes={data.notes} />}
+
+      {data.totalPages > 1 && (
+        <Pagination
+          pageCount={data.totalPages}
+          currentPage={page}
+          onPageChange={(selected) => setPage(selected + 1)}
+        />
       )}
 
       {isModalOpen && (
-        <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm onSubmit={(values) => createMutation.mutate(values)} />
+        <Modal onClose={closeModal}>
+          <NoteForm onClose={closeModal} />
         </Modal>
       )}
     </div>
   );
-}
+};
+
+export default App;
